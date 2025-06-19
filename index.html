@@ -116,15 +116,16 @@
 
         /* Interactive area inside cards */
         .interactive-area {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.25);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color-bright);
             padding: 1rem;
             transition: background 0.3s ease;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            min-height: 150px; /* ensure canvas areas are visible */
         }
         .concept-card:hover .interactive-area {
             background: rgba(0, 0, 0, 0.3);
