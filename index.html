@@ -296,7 +296,7 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initialize the page as soon as the script loads to avoid timing issues
         // --- DATA ---
         const concepts = [
             { id: 'tokens', title: 'Tokens', emoji: '🧩', category: 'fundamentals' },
@@ -1174,7 +1174,6 @@
         closeModalBtn.addEventListener('click', hideModal);
         modal.addEventListener('click', (e) => e.target === modal && hideModal());
         document.addEventListener('keydown', (e) => e.key === "Escape" && hideModal());
-    });
-    </script>
+</script>
 </body>
 </html>
