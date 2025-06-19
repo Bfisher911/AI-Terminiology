@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Concepts Explorer - Fully Interactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles and font setup */
+        :root {
+            --bg-color: #0D1117;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color-bright: rgba(255, 255, 255, 0.3);
+            --glow-color: rgba(88, 166, 255, 0.5);
+            --text-color: #E6EDF3;
+            --text-muted-color: #8B949E;
+            --accent-blue: #58A6FF;
+            --accent-green: #3FB950;
+            --accent-purple: #BC8CFF;
+            --accent-pink: #FF7B72;
+            --accent-yellow: #F0E68C;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Background glow effects */
+        .background-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.2;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            left: -200px;
+            background-color: #7928CA;
+            animation: float 25s ease-in-out infinite alternate;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -200px;
+            right: -150px;
+            background-color: #0070F3;
+            animation: float 20s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 80px); }
+        }
+
+        /* Card styles */
+        .concept-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .concept-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.06), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .concept-card:hover:before {
+            opacity: 1;
+        }
+
+        .concept-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Category-specific card glows */
+        .concept-card[data-category="fundamentals"]:hover { box-shadow: 0 0 25px rgba(88, 166, 255, 0.3); }
+        .concept-card[data-category="architecture"]:hover { box-shadow: 0 0 25px rgba(188, 140, 255, 0.3); }
+        .concept-card[data-category="training"]:hover { box-shadow: 0 0 25px rgba(63, 185, 80, 0.3); }
+        .concept-card[data-category="advanced"]:hover { box-shadow: 0 0 25px rgba(255, 123, 114, 0.3); }
+
+        /* Interactive area inside cards */
+        .interactive-area {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem;
+            transition: background 0.3s ease;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .concept-card:hover .interactive-area {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Unified Button Style */
+        .primary-btn, .secondary-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            padding: 8px 0;
+        }
+
+        .primary-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.08);
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+        .secondary-btn.active {
+            background: var(--accent-blue);
+            color: var(--bg-color);
+            font-weight: 700;
+        }
+        .secondary-btn:hover {
+             background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Category Filter Pills */
+        .category-pill {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted-color);
+            transition: all 0.3s ease;
+        }
+        .category-pill.active, .category-pill:hover {
+            color: var(--text-color);
+            background: var(--card-bg);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        }
+
+        /* Modal styling */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        .modal-content-area {
+            background: rgba(13, 17, 23, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+        }
+        .prose-custom { color: var(--text-color); }
+        .prose-custom h3 { color: var(--accent-blue); font-weight: 600; }
+        .prose-custom p { color: var(--text-muted-color); }
+        .prose-custom code {
+            color: var(--accent-pink);
+            background-color: rgba(255, 123, 114, 0.1);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .prose-custom strong { color: var(--accent-yellow); }
+        .prose-custom pre {
+            background-color: rgba(0,0,0,0.3) !important;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+         .prose-custom pre code {
+            background-color: transparent !important;
+            padding: 0;
+         }
+
+        /* Custom range input */
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            background: transparent; cursor: pointer; width: 100%;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
+            height: 4px; border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            margin-top: -7px;
+            background-color: #fff;
+            height: 18px; width: 18px;
+            border-radius: 50%; border: 2px solid var(--bg-color);
+            box-shadow: 0 0 10px var(--glow-color);
+        }
+
+        /* Animation for card appearance */
+        .smooth-appear {
+            animation: smoothAppear 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes smoothAppear { to { opacity: 1; transform: translateY(0); } }
+
+        .flow-line {
+            stroke-dasharray: 5;
+            animation: flow 2s linear infinite;
+        }
+        @keyframes flow {
+            to { stroke-dashoffset: -10; }
+        }
+        
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="background-glow">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <header class="relative z-10 text-center py-16 px-4">
+        <h1 class="text-5xl md:text-6xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">
+            AI Concepts Explorer
+        </h1>
+        <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
+            An interactive journey through the fundamental building blocks of modern AI.
+        </p>
+        
+        <div class="flex flex-wrap justify-center gap-3 mt-10">
+            <button class="category-pill px-5 py-2 rounded-full text-sm font-medium active" data-category="all">
+                ✨ All
+            </button>
+            <button class="category-pill px-5 py-2 rounded-full text-sm font-medium" data-category="fundamentals">
+                <span class="text-blue-400 mr-2">🎯</span>Fundamentals
+            </button>
+            <button class="category-pill px-5 py-2 rounded-full text-sm font-medium" data-category="architecture">
+                <span class="text-purple-400 mr-2">🏗️</span>Architecture
+            </button>
+            <button class="category-pill px-5 py-2 rounded-full text-sm font-medium" data-category="training">
+                <span class="text-green-400 mr-2">⚡</span>Training
+            </button>
+            <button class="category-pill px-5 py-2 rounded-full text-sm font-medium" data-category="advanced">
+                <span class="text-pink-400 mr-2">🚀</span>Advanced
+            </button>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20">
+        <div id="concepts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            </div>
+    </main>
+
+    <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0"></div>
+        <div class="modal-content-area relative w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 rounded-2xl smooth-appear">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <h2 id="modal-title" class="text-3xl font-bold mb-4 text-gray-200"></h2>
+            <div id="modal-body" class="prose-custom max-w-none"></div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DATA ---
+        const concepts = [
+            { id: 'tokens', title: 'Tokens', emoji: '🧩', category: 'fundamentals' },
+            { id: 'embeddings', title: 'Embeddings', emoji: '📍', category: 'fundamentals' },
+            { id: 'weights', title: 'Weights', emoji: '⚖️', category: 'fundamentals' },
+            { id: 'temperature', title: 'Temperature', emoji: '🌡️', category: 'fundamentals' },
+            { id: 'attention', title: 'Attention', emoji: '👁️', category: 'architecture' },
+            { id: 'transformer', title: 'Transformer', emoji: '🔄', category: 'architecture' },
+            { id: 'neural-network', title: 'Neural Network', emoji: '🧠', category: 'architecture' },
+            { id: 'activation', title: 'Activation', emoji: '⚡', category: 'architecture' },
+            { id: 'dropout', title: 'Dropout', emoji: '🎲', category: 'architecture' },
+            { id: 'learning-rate', title: 'Learning Rate', emoji: '📈', category: 'training' },
+            { id: 'batch-size', title: 'Batch Size', emoji: '📦', category: 'training' },
+            { id: 'gradient-descent', title: 'Gradient Descent', emoji: '⛷️', category: 'training' },
+            { id: 'loss-function', title: 'Loss Function', emoji: '📉', category: 'training' },
+            { id: 'epochs', title: 'Epochs', emoji: '🔁', category: 'training' },
+            { id: 'overfitting', title: 'Overfitting', emoji: '🎯', category: 'training' },
+            { id: 'backpropagation', title: 'Backpropagation', emoji: '↩️', category: 'training' },
+            { id: 'context-window', title: 'Context Window', emoji: '🪟', category: 'advanced' },
+            { id: 'hallucination', title: 'Hallucination', emoji: '🌈', category: 'advanced' },
+            { id: 'rag', title: 'RAG', emoji: '📚', category: 'advanced' },
+            { id: 'fine-tuning', title: 'Fine-tuning', emoji: '🎨', category: 'advanced' },
+            { id: 'prompt-engineering', title: 'Prompt Engineering', emoji: '✏️', category: 'advanced' },
+            { id: 'inference', title: 'Inference', emoji: '💡', category: 'advanced' },
+            { id: 'quantization', title: 'Quantization', emoji: '📐', category: 'advanced' },
+            { id: 'few-shot', title: 'Few-shot Learning', emoji: '🎯', category: 'advanced' },
+            { id: 'beam-search', title: 'Beam Search', emoji: '🔍', category: 'advanced' },
+        ];
+        
+        const conceptDetails = {
+            tokens: { title: "Tokens", content: `<p>Tokens are the fundamental units language models use to process text. They can be words, parts of words (subwords), or individual characters.</p><h3>How it works:</h3><p>Text is broken down into tokens using a tokenizer. For example, <code>chatbot</code> might be one token, while <code>unbelievable</code> might be split into <code>un</code>, <code>believ</code>, and <code>able</code>. This allows the model to handle words it has never seen before.</p><h3>Analogy:</h3><p>Think of tokens as <strong>LEGO blocks for language</strong>. Just as you build complex structures from individual LEGO pieces, language models build understanding and generate text from individual tokens.</p>` },
+            embeddings: { title: "Embeddings", content: `<p>Embeddings are numerical representations (vectors) of words or tokens in a high-dimensional space, where semantic similarity corresponds to spatial proximity.</p><h3>How it works:</h3><p>Each token is mapped to a dense vector of numbers. Words with similar meanings have similar vectors, allowing the model to perform mathematical operations on meaning. The relationship 'king - man + woman' results in a vector very close to 'queen'.</p><h3>Analogy:</h3><p>Imagine a <strong>library where books are organized by topic and relationship</strong>, not alphabetically. "King" and "Queen" would be on the same royal shelf, close to each other, while "Car" would be in a completely different 'transportation' section.</p>` },
+            weights: { title: "Weights", content: `<p>Weights are the adjustable parameters within a neural network that determine the strength and importance of the connections between neurons.</p><h3>How it works:</h3><p>During training, the model adjusts its weights to minimize the difference between its predictions and the actual correct answers (the loss). Higher weights mean a stronger connection and more influence on the final output. The entire 'knowledge' of the model is stored in these weights.</p><h3>Analogy:</h3><p>Imagine a <strong>team of advisors where each person's opinion carries a different 'weight'</strong> based on their expertise on a topic. The AI learns which advisor's opinion to weigh most heavily to make the best final decision.</p>` },
+            temperature: { title: "Temperature", content: `<p>Temperature is a parameter that controls the randomness and creativity of an AI's generated output.</p><h3>How it works:</h3><p>It adjusts the probability distribution of the next possible tokens. A low temperature (e.g., 0.2) makes the model more confident and deterministic, picking the most likely words. A high temperature (e.g., 1.5) increases randomness, allowing for more creative, diverse, but potentially less coherent, outputs.</p><h3>Analogy:</h3><p>It's like a <strong>creativity dial</strong>. Low temperature is a factual news report (predictable and informative). High temperature is a freestyle jazz solo (unexpected and creative).</p>` },
+            attention: { title: "Attention", content: `<p>The attention mechanism allows a model to weigh the importance of different words in the input text when processing a specific part of it.</p><h3>How it works:</h3><p>For each word it generates, the model can 'look back' at the entire input sequence and assign attention scores to each word, focusing more on the ones that are most relevant for determining the next word. This is the core innovation of the Transformer architecture.</p><h3>Analogy:</h3><p>When you read the sentence "The cat sat on the mat because <strong>it</strong> was tired," your brain instinctively knows 'it' refers to the 'cat'. Attention is the mechanism that allows an AI to make that same connection, <strong>acting like a highlighter</strong> to focus on 'cat' when processing 'it'.</p>` },
+            transformer: { title: "Transformer", content: `<p>The Transformer is a neural network architecture that relies on self-attention mechanisms to process input data in parallel, making it highly efficient for language tasks.</p><h3>How it works:</h3><p>Unlike older models that process text sequentially (like RNNs), Transformers look at all tokens at once. The <strong>Encoder</strong> part processes the input text to build a rich understanding, and the <strong>Decoder</strong> part uses that understanding to generate the output sequence.</p><h3>Analogy:</h3><p>It's like upgrading from reading a book one word at a time through a keyhole (RNN) to <strong>seeing the entire page at once</strong>. You can instantly see the relationship between the first word and the last, leading to a much deeper understanding.</p>` },
+            "neural-network": { title: "Neural Network", content: `<p>A neural network is a computing system inspired by the biological brain, composed of interconnected nodes called 'neurons' organized in layers.</p><h3>How it works:</h3><p>Data enters the <strong>Input Layer</strong>, passes through one or more <strong>Hidden Layers</strong> where computations occur, and exits via the <strong>Output Layer</strong>. Each connection has a weight that is adjusted during training, allowing the network to 'learn' complex patterns.</p><h3>Analogy:</h3><p>Think of it as a sophisticated <strong>assembly line</strong>. Each layer is a station that performs a specific, progressively more complex task. The first might detect edges, the next shapes, and the final one a complete object, like a face.</p>` },
+            activation: { title: "Activation Function", content: `<p>An activation function is a mathematical "gate" in a neuron that decides whether the neuron should be activated ("fire") or not, based on the weighted sum of its inputs.</p><h3>How it works:</h3><p>It introduces non-linearity into the network, which is crucial for learning complex patterns. Without it, a neural network would just be a simple linear model. Common functions include <strong>ReLU</strong> (Rectified Linear Unit), <strong>Sigmoid</strong>, and <strong>Tanh</strong>.</p><h3>Analogy:</h3><p>It's like a <strong>light switch with a dimmer</strong>. It doesn't just decide if the light is on or off; it can control the brightness. It transforms a simple input (the flip) into a nuanced output (a specific level of light).</p>` },
+            dropout: { title: "Dropout", content: `<p>Dropout is a regularization technique used to prevent overfitting in neural networks.</p><h3>How it works:</h3><p>During each training step, a random fraction of neurons are temporarily "dropped out" or ignored. This forces other neurons in the network to learn more robust features that are not dependent on any single neuron.</p><h3>Analogy:</h3><p>It's like <strong>training a sports team by randomly having players sit out</strong> during practice. The team learns to function effectively and win, even if its star player isn't available, making the whole team stronger and more versatile.</p>` },
+            "learning-rate": { title: "Learning Rate", content: `<p>The learning rate is a hyperparameter that controls how much the model's weights are adjusted with respect to the loss gradient for each training batch.</p><h3>How it works:</h3><p>It determines the size of the steps the model takes during optimization. A <strong>high</strong> learning rate can cause the model to converge too quickly and overshoot the optimal solution. A <strong>low</strong> learning rate can make the training process too slow or get stuck in a suboptimal solution.</p><h3>Analogy:</h3><p>Imagine you're descending a mountain in the fog (finding the lowest loss). The learning rate is your <strong>step size</strong>. Take giant leaps (high LR), and you might leap right over the valley. Take tiny shuffles (low LR), and it could take forever to get down.</p>` },
+            "batch-size": { title: "Batch Size", content: `<p>The batch size is the number of training examples utilized in one iteration (or training step).</p><h3>How it works:</h3><p>The dataset is divided into a number of batches. The model processes one batch at a time and updates its weights. A <strong>larger batch size</strong> provides a more accurate estimate of the gradient, but requires more memory. A <strong>smaller batch size</strong> is noisier but can help the model generalize better.</p><h3>Analogy:</h3><p>It's like a teacher grading papers. They could grade <strong>one paper at a time</strong> (batch size of 1) and adjust their teaching method, or grade a <strong>whole stack (a batch)</strong> and then adjust based on the overall performance of that group.</p>` },
+            "gradient-descent": { title: "Gradient Descent", content: `<p>Gradient descent is an optimization algorithm used to find the values of parameters (weights) of a function (loss function) that minimizes the function.</p><h3>How it works:</h3><p>It works by iteratively moving in the direction of the steepest descent, which is the negative of the gradient. By repeatedly calculating the gradient of the loss function with respect to the weights, it updates the weights to reduce the error.</p><h3>Analogy:</h3><p>It's exactly like a <strong>ball rolling down a hill</strong>. The ball will naturally follow the steepest path downwards until it settles at the lowest point (the minimum of the loss function).</p>` },
+            "loss-function": { title: "Loss Function", content: `<p>A loss function, or cost function, quantifies how far a model's prediction is from the actual target value. The goal of training is to minimize this value.</p><h3>How it works:</h3><p>It takes the model's prediction and the true label and computes a single number representing the 'error' or 'loss'. The optimization algorithm (like Gradient Descent) uses this value to adjust the model's weights.</p><h3>Analogy:</h3><p>Think of it as the score in a game of <strong>golf or bowling</strong>. It's a number that tells you how well you're doing, and the goal is always to get the lowest score possible.</p>` },
+            epochs: { title: "Epochs", content: `<p>An epoch is one complete pass through the entire training dataset.</p><h3>How it works:</h3><p>Training a model usually takes multiple epochs. In each epoch, the model gets to see every training example once. This repetition allows the model to learn the patterns in the data more thoroughly.</p><h3>Analogy:</h3><p>It's like <strong>reading a textbook multiple times before an exam</strong>. The first pass gives you a general idea. Subsequent passes (epochs) help you solidify your understanding and remember the details.</p>` },
+            overfitting: { title: "Overfitting", content: `<p>Overfitting happens when a model learns the training data too well, to the point that it memorizes the noise and details in the training data, rather than the general patterns.</p><h3>How it works:</h3><p>An overfit model performs exceptionally well on the data it was trained on, but poorly on new, unseen data. <strong>Underfitting</strong> is the opposite: the model is too simple and hasn't learned the patterns even in the training data. A <strong>Good Fit</strong> is a balance between the two.</p><h3>Analogy:</h3><p>Imagine a student studying for a test. <strong>Underfitting</strong> is not studying at all. A <strong>Good Fit</strong> is understanding the concepts. <strong>Overfitting</strong> is memorizing the exact answers to the practice questions, but being unable to solve any new problems.</p>` },
+            backpropagation: { title: "Backpropagation", content: `<p>Backpropagation (short for "backward propagation of errors") is the algorithm used to train neural networks by efficiently calculating the gradient of the loss function.</p><h3>How it works:</h3><p>First, there's a <strong>Forward Pass</strong> where input data goes through the network to produce an output and calculate the error. Then, in the <strong>Backward Pass</strong>, the error is propagated backward from the output layer to the input layer, calculating the contribution of each weight to the error and updating it accordingly.</p><h3>Analogy:</h3><p>It's like a <strong>team debriefing after a failed project</strong>. You start with the final failed outcome and trace the steps backward, assigning blame (or credit) to each member (neuron) at each stage, so they can improve for the next project.</p>` },
+            "context-window": { title: "Context Window", content: `<p>The context window is the maximum number of tokens a language model can take as input and process at one time.</p><h3>How it works:</h3><p>This includes the initial prompt and any previous parts of the conversation. Everything outside this window is forgotten by the model. Larger context windows allow for longer conversations and more coherent text generation over long passages, but are more computationally expensive.</p><h3>Analogy:</h3><p>Think of it as the model's <strong>short-term memory</strong>. A small context window is like having a conversation with someone who forgets what you said a minute ago. A large one allows for deep, context-rich discussions.</p>` },
+            hallucination: { title: "Hallucination", content: `<p>A hallucination is when an AI model generates text that is nonsensical, factually incorrect, or disconnected from the provided source content, yet presents it confidently.</p><h3>How it works:</h3><p>Models are designed to generate the statistically most probable sequence of words, not to state facts. If the patterns it learned lead to a plausible-sounding but false statement, it will generate it without any awareness of its truthfulness.</p><h3>Analogy:</h3><p>It's like a student who is a <strong>very confident bluffer</strong>. When they don't know the answer to a question on a test, they write something that sounds eloquent and plausible, even if it's completely made up.</p>` },
+            rag: { title: "Retrieval-Augmented Generation (RAG)", content: `<p>RAG is a technique that enhances a language model's output by first retrieving relevant and factual information from an external knowledge base.</p><h3>How it works:</h3><p>When a query is received, the system first searches a database (like a collection of documents or a website) for relevant information. This retrieved text is then added to the original prompt and sent to the LLM, which uses this new context to generate a more accurate and grounded answer.</p><h3>Analogy:</h3><p>RAG is like giving a student an <strong>open-book test</strong>. Instead of relying only on what they've memorized (the model's internal weights), they can consult a textbook (the knowledge base) before answering, leading to much more accurate results.</p>` },
+            "fine-tuning": { title: "Fine-tuning", content: `<p>Fine-tuning is the process of taking a large, pre-trained model and training it further on a smaller, task-specific dataset.</p><h3>How it works:</h3><p>A general-purpose base model (like GPT) has broad knowledge. By fine-tuning it on a specific dataset (e.g., medical transcripts or legal documents), you adapt its knowledge and style to excel at that particular task without having to train a model from scratch.</p><h3>Analogy:</h3><p>It's like hiring a <strong>talented chef and teaching them your grandmother's secret recipes</strong>. They already have all the fundamental cooking skills (pre-trained model), you're just giving them specialized knowledge to perfect a specific cuisine (the fine-tuning task).</p>` },
+            "prompt-engineering": { title: "Prompt Engineering", content: `<p>Prompt engineering is the art and science of designing effective inputs (prompts) to guide an AI model toward a desired output.</p><h3>How it works:</h3><p>The quality of the output is highly dependent on the quality of the prompt. A well-engineered prompt is specific, provides context, gives examples (few-shot), and clearly defines the desired format, role, and tone of the output.</p><h3>Analogy:</h3><p>It's like being a skilled <strong>director guiding a brilliant actor</strong>. The actor (AI) has immense talent, but they need clear, precise direction (the prompt) to deliver the perfect performance you're looking for.</p>` },
+            inference: { title: "Inference", content: `<p>Inference is the process of using a fully trained model to make predictions on new, unseen data.</p><h3>How it works:</h3><p>After the model has been trained, its weights are frozen. Inference is the 'live' phase where the model is actually put to use. You provide an input, and it generates an output through a single forward pass, without any more learning or weight updates.</p><h3>Analogy:</h3><p>Training is like studying for the test. Inference is <strong>actually taking the test</strong>. All the learning is done, and now it's time to apply that knowledge to new questions.</p>` },
+            quantization: { title: "Quantization", content: `<p>Quantization is the process of reducing the precision of the numbers used to represent a model's weights, typically from 32-bit floating-point numbers to 8-bit integers or smaller.</p><h3>How it works:</h3><p>Lower precision numbers require less memory and allow for faster computation on hardware. This makes it possible to run large models on smaller devices (like phones) with a minimal drop in performance.</p><h3>Analogy:</h3><p>It's like <strong>compressing a high-resolution photograph into a JPEG</strong>. You reduce the file size by simplifying the color information, but if done well, the image looks nearly identical to the original at a fraction of the size.</p>` },
+            "few-shot": { title: "Few-shot Learning", content: `<p>Few-shot learning is the ability of a large language model to learn a new task from just a handful of examples provided directly in the prompt.</p><h3>How it works:</h3><p>Instead of extensive fine-tuning, you simply show the model what you want. For example, to teach it sentiment analysis, you'd provide:</p><pre><code>Text: "I love this!"   -> Positive\nText: "This is awful."  -> Negative\nText: "The movie was okay." -></code></pre><p>The model then understands the pattern and completes it.</p><h3>Analogy:</h3><p>It's like <strong>teaching a child a new game by showing them a few quick rounds</strong>. You don't need to write a rulebook; they can infer the rules from just a few examples in action.</p>` },
+            "beam-search": { title: "Beam Search", content: `<p>Beam search is a decoding algorithm used in text generation that explores multiple potential output sequences at each step, rather than just picking the single most likely word.</p><h3>How it works:</h3><p>It maintains a "beam" of the <code>k</code> most probable sequences at each time step. This helps avoid getting stuck in a suboptimal path that starts with a high-probability word but leads to a poor overall sentence. It's a trade-off between the greedy approach (beam width of 1) and an exhaustive search.</p><h3>Analogy:</h3><p>It's like a <strong>chess computer analyzing a few of the best possible moves</strong> instead of just the single best one. By looking a few steps ahead down several promising paths, it can choose a more strategic and coherent overall game plan (sentence).</p>` },
+        };
+
+        // --- DOM & CANVAS ELEMENTS ---
+        const grid = document.getElementById('concepts-grid');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const closeModalBtn = document.getElementById('close-modal');
+        const categoryButtons = document.querySelectorAll('.category-pill');
+
+        // Store all canvas draw functions to be called on resize
+        let canvasDrawFunctions = [];
+
+        // Debounce function to limit how often a function can run
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+
+        // --- RENDER CARDS ---
+        const createCardHTML = (concept, index) => {
+            const colors = {
+                fundamentals: 'text-blue-400', architecture: 'text-purple-400',
+                training: 'text-green-400', advanced: 'text-pink-400',
+            };
+            const titleColor = colors[concept.category] || 'text-gray-200';
+
+            return `
+                <div class="concept-card p-5 smooth-appear" data-category="${concept.category}" data-concept-id="${concept.id}" style="animation-delay: ${index * 40}ms">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-lg font-bold ${titleColor}">${concept.title}</h3>
+                        <span class="text-2xl -mt-1">${concept.emoji}</span>
+                    </div>
+                    <div class="interactive-area mb-4" id="interactive-${concept.id}">
+                        </div>
+                    <button class="primary-btn w-full text-sm learn-more">
+                        Learn More
+                    </button>
+                </div>`;
+        };
+        
+        concepts.forEach((concept, index) => grid.innerHTML += createCardHTML(concept, index));
+        
+        // --- INITIALIZE ALL INTERACTIONS ---
+        function initAllInteractions() {
+            canvasDrawFunctions = []; // Clear the array before re-initializing
+            concepts.forEach(concept => {
+                const container = document.getElementById(`interactive-${concept.id}`);
+                if (!container) return;
+                
+                // Add specific initializers here, passing the container
+                switch(concept.id) {
+                    case 'tokens': initTokens(container); break;
+                    case 'embeddings': initEmbeddings(container); break;
+                    case 'weights': initWeights(container); break;
+                    case 'temperature': initTemperature(container); break;
+                    case 'attention': initAttention(container); break;
+                    case 'transformer': initTransformer(container); break;
+                    case 'neural-network': initNeuralNetwork(container); break;
+                    case 'activation': initActivation(container); break;
+                    case 'dropout': initDropout(container); break;
+                    case 'learning-rate': initLearningRate(container); break;
+                    case 'batch-size': initBatchSize(container); break;
+                    case 'gradient-descent': initGradientDescent(container); break;
+                    case 'loss-function': initLossFunction(container); break;
+                    case 'epochs': initEpochs(container); break;
+                    case 'overfitting': initOverfitting(container); break;
+                    case 'backpropagation': initBackpropagation(container); break;
+                    case 'context-window': initContextWindow(container); break;
+                    case 'hallucination': initHallucination(container); break;
+                    case 'rag': initRag(container); break;
+                    case 'fine-tuning': initFineTuning(container); break;
+                    case 'prompt-engineering': initPromptEngineering(container); break;
+                    case 'inference': initInference(container); break;
+                    case 'quantization': initQuantization(container); break;
+                    case 'few-shot': initFewShot(container); break;
+                    case 'beam-search': initBeamSearch(container); break;
+                }
+            });
+
+             // Mouse follow effect for cards
+             grid.addEventListener('mousemove', (e) => {
+                const card = e.target.closest('.concept-card');
+                if (card) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                }
+            });
+        }
+        
+        // --- SPECIFIC INTERACTION INITIALIZERS ---
+
+        function initTokens(container) {
+            container.innerHTML = `
+                <input type="text" placeholder="Type something..." class="w-full bg-transparent border-b border-gray-600 focus:border-blue-400 outline-none pb-1 mb-3 text-sm">
+                <div class="token-output flex flex-wrap gap-1.5 min-h-[40px]"></div>
+                <div class="text-xs text-gray-400 mt-auto pt-2">Tokens: <span class="token-count">0</span></div>`;
+            
+            const input = container.querySelector('input');
+            const output = container.querySelector('.token-output');
+            const count = container.querySelector('.token-count');
+
+            input.addEventListener('input', () => {
+                const text = input.value;
+                const tokens = text.split(/(\s+|[.,!?;:()"])/g).filter(t => t.trim());
+                output.innerHTML = '';
+                tokens.forEach(token => {
+                    const span = document.createElement('span');
+                    span.className = 'inline-block px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs animate-pulse';
+                    span.textContent = token;
+                    output.appendChild(span);
+                });
+                count.textContent = tokens.length;
+            });
+        }
+
+        function initEmbeddings(container) {
+            container.innerHTML = `<canvas class="w-full h-full rounded-lg"></canvas>`;
+            const canvas = container.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const points = [
+                { text: 'king', x: 0.2, y: 0.3, color: 'var(--accent-blue)' },
+                { text: 'queen', x: 0.4, y: 0.3, color: 'var(--accent-blue)' },
+                { text: 'man', x: 0.2, y: 0.7, color: 'var(--accent-green)' },
+                { text: 'woman', x: 0.4, y: 0.7, color: 'var(--accent-green)' },
+                { text: 'apple', x: 0.8, y: 0.5, color: 'var(--accent-pink)' },
+            ];
+
+            function draw() {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                points.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x * canvas.width, p.y * canvas.height, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+                    
+                    ctx.font = '12px Inter';
+                    ctx.fillStyle = 'var(--text-color)'; // <-- FIX: Use bright text color
+                    ctx.fillText(p.text, p.x * canvas.width + 10, p.y * canvas.height + 4);
+                });
+            }
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+        function initWeights(container) {
+            container.innerHTML = `
+                <svg viewBox="0 0 100 50" class="w-full h-20"></svg>
+                <div class="space-y-2 mt-2">
+                  <input type="range" class="weight1" min="0" max="1" step="0.1" value="0.5">
+                  <input type="range" class="weight2" min="0" max="1" step="0.1" value="0.2">
+                </div>`;
+            const svg = container.querySelector('svg');
+            svg.innerHTML = `
+                <circle cx="10" cy="10" r="4" fill="var(--accent-blue)"/>
+                <circle cx="10" cy="40" r="4" fill="var(--accent-blue)"/>
+                <circle class="out-neuron" cx="90" cy="25" r="5" fill="var(--accent-purple)"/>
+                <line class="w1-line" x1="10" y1="10" x2="90" y2="25" stroke="var(--accent-blue)" />
+                <line class="w2-line" x1="10" y1="40" x2="90" y2="25" stroke="var(--accent-blue)" />`;
+
+            const w1 = container.querySelector('.weight1');
+            const w2 = container.querySelector('.weight2');
+            const line1 = container.querySelector('.w1-line');
+            const line2 = container.querySelector('.w2-line');
+            const outNeuron = container.querySelector('.out-neuron');
+            
+            function update() {
+                line1.setAttribute('stroke-width', 1 + w1.value * 4);
+                line1.setAttribute('opacity', 0.2 + w1.value * 0.8);
+                line2.setAttribute('stroke-width', 1 + w2.value * 4);
+                line2.setAttribute('opacity', 0.2 + w2.value * 0.8);
+                outNeuron.setAttribute('r', 4 + (parseFloat(w1.value) + parseFloat(w2.value)) * 2);
+            }
+            w1.addEventListener('input', update);
+            w2.addEventListener('input', update);
+            update();
+        }
+
+        function initTemperature(container) {
+            container.innerHTML = `
+                <div class="text-center mb-2"><div class="temp-emoji text-4xl transition-all duration-300">😐</div></div>
+                <input type="range" class="temperature" min="0" max="2" step="0.1" value="0.7">
+                <div class="text-xs text-center mt-2 text-gray-400">Temp: <span class="temp-val">0.7</span></div>`;
+
+            const slider = container.querySelector('.temperature');
+            const val = container.querySelector('.temp-val');
+            const emoji = container.querySelector('.temp-emoji');
+            slider.addEventListener('input', () => {
+                const temp = parseFloat(slider.value);
+                val.textContent = temp.toFixed(1);
+                if (temp < 0.5) emoji.textContent = '❄️'; // Factual
+                else if (temp < 1.2) emoji.textContent = '😐'; // Balanced
+                else emoji.textContent = '🔥'; // Creative
+            });
+        }
+        
+        function initAttention(container) {
+            container.innerHTML = `<div class="text-sm leading-relaxed font-medium text-center text-gray-300">
+                The <span class="attention-word" data-ref="1">robot</span> can't lift the <span class="attention-word" data-ref="2">box</span> because <span class="attention-word" data-ref="1">it</span> is too <span class="attention-word" data-ref="1">heavy</span>.
+            </div>`;
+            const words = container.querySelectorAll('.attention-word');
+            words.forEach(word => {
+                word.addEventListener('mouseover', () => {
+                    const ref = word.dataset.ref;
+                    words.forEach(w => {
+                       if (w.dataset.ref === ref) {
+                           w.classList.add('bg-purple-500/30', 'rounded', 'px-1', 'transition-all', 'duration-200');
+                       } else {
+                           w.classList.remove('bg-purple-500/30', 'rounded', 'px-1');
+                       }
+                    });
+                });
+                word.addEventListener('mouseleave', () => {
+                     words.forEach(w => w.classList.remove('bg-purple-500/30', 'rounded', 'px-1'));
+                });
+            });
+        }
+        
+        function initTransformer(container) {
+            container.innerHTML = `<svg viewBox="0 0 100 50" class="w-full h-full">
+                <rect x="5" y="15" width="25" height="20" rx="2" fill="var(--accent-blue)" opacity="0.5"/>
+                <text x="17.5" y="29" font-size="6" text-anchor="middle" fill="var(--text-color)">Encoder</text>
+                <rect x="70" y="15" width="25" height="20" rx="2" fill="var(--accent-purple)" opacity="0.5"/>
+                <text x="82.5" y="29" font-size="6" text-anchor="middle" fill="var(--text-color)">Decoder</text>
+                <path d="M 30 25 Q 50 10 70 25" stroke="var(--text-muted-color)" fill="none" stroke-width="1" class="flow-line" />
+                <path d="M 70 25 Q 50 40 30 25" stroke="var(--text-muted-color)" fill="none" stroke-width="1" class="flow-line" style="animation-direction: reverse;"/>
+            </svg>`;
+        }
+
+        function initNeuralNetwork(container) {
+            container.innerHTML = `<svg viewBox="0 0 100 50" class="w-full h-full"></svg>
+            <div class="flex gap-2 mt-2">
+                <button class="add-layer secondary-btn flex-1">Add Layer</button>
+                <button class="remove-layer secondary-btn flex-1">Remove</button>
+            </div>`;
+            const svg = container.querySelector('svg');
+            let layers = [3, 5, 4, 2];
+            
+            function draw() {
+                svg.innerHTML = '';
+                const layerXs = layers.map((_, i) => 10 + i * 80 / (layers.length -1));
+                layers.forEach((size, i) => {
+                    const x = layerXs[i];
+                    for (let j = 0; j < size; j++) {
+                        const y = 5 + j * 40 / (size - 1 || 1);
+                        if (i > 0) {
+                           const prevSize = layers[i-1];
+                           for (let k = 0; k < prevSize; k++) {
+                               const prevY = 5 + k * 40 / (prevSize - 1 || 1);
+                               const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                               line.setAttribute('x1', layerXs[i-1]); line.setAttribute('y1', prevY);
+                               line.setAttribute('x2', x); line.setAttribute('y2', y);
+                               line.setAttribute('stroke', 'var(--border-color)'); line.setAttribute('stroke-width', '0.5');
+                               svg.appendChild(line);
+                           }
+                        }
+                    }
+                });
+                 layers.forEach((size, i) => {
+                    const x = layerXs[i];
+                    for (let j = 0; j < size; j++) {
+                        const y = 5 + j * 40 / (size - 1 || 1);
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', '2');
+                        circle.setAttribute('fill', i === 0 ? 'var(--accent-blue)' : i === layers.length - 1 ? 'var(--accent-purple)' : 'var(--text-color)');
+                        svg.appendChild(circle);
+                    }
+                });
+            }
+            container.querySelector('.add-layer').addEventListener('click', () => { if (layers.length < 6) { layers.splice(-1, 0, 4); draw(); }});
+            container.querySelector('.remove-layer').addEventListener('click', () => { if (layers.length > 2) { layers.splice(-2, 1); draw(); }});
+            draw();
+        }
+
+        function initActivation(container) {
+            container.innerHTML = `<canvas class="w-full h-24 rounded-lg"></canvas>
+            <div class="grid grid-cols-3 gap-2 mt-2">
+                <button data-func="relu" class="secondary-btn active">ReLU</button>
+                <button data-func="sigmoid" class="secondary-btn">Sigmoid</button>
+                <button data-func="tanh" class="secondary-btn">Tanh</button>
+            </div>`;
+            const canvas = container.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            let currentFunc = 'relu';
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                if (w === 0) return;
+                ctx.clearRect(0, 0, w, h);
+                ctx.strokeStyle = 'var(--border-color-bright)'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+
+                ctx.strokeStyle = 'var(--accent-pink)'; ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < w; i++) {
+                    const x = (i - w/2) / (w/8);
+                    let y;
+                    if (currentFunc === 'relu') y = Math.max(0, x);
+                    else if (currentFunc === 'sigmoid') y = 1 / (1 + Math.exp(-x));
+                    else y = Math.tanh(x);
+                    if (i === 0) ctx.moveTo(i, h/2 - y * (h/4));
+                    else ctx.lineTo(i, h/2 - y * (h/4));
+                }
+                ctx.stroke();
+            }
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    container.querySelector('.active').classList.remove('active');
+                    btn.classList.add('active');
+                    currentFunc = btn.dataset.func;
+                    draw();
+                });
+            });
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+        function initDropout(container) {
+             container.innerHTML = `<div class="grid grid-cols-5 gap-2"></div>
+                <div class="text-center mt-3">
+                    <button class="secondary-btn">Apply Dropout</button>
+                </div>`;
+            const grid = container.querySelector('.grid');
+            for (let i = 0; i < 15; i++) {
+                const neuron = document.createElement('div');
+                neuron.className = 'w-4 h-4 rounded-full bg-purple-400 transition-all duration-300 mx-auto';
+                grid.appendChild(neuron);
+            }
+            container.querySelector('button').addEventListener('click', () => {
+                grid.querySelectorAll('div').forEach(n => {
+                    const isDropped = Math.random() < 0.4;
+                    n.style.opacity = isDropped ? '0.2' : '1';
+                    n.style.transform = isDropped ? 'scale(0.8)' : 'scale(1)';
+                });
+            });
+        }
+        
+        function initLearningRate(container) {
+            container.innerHTML = `<canvas class="w-full h-full rounded-lg"></canvas>
+            <input type="range" class="lr-slider" min="0.1" max="1.5" step="0.1" value="0.5" class="w-full mt-2">`;
+            const canvas = container.querySelector('canvas');
+            const slider = container.querySelector('.lr-slider');
+            const ctx = canvas.getContext('2d');
+
+            function landscape(x) { return Math.sin(x * 0.1) * 0.4 + 0.5; }
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                if (w === 0) return;
+                ctx.clearRect(0,0,w,h);
+                
+                ctx.strokeStyle = 'var(--accent-green)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for(let i=0; i<w; i++) {
+                    ctx.lineTo(i, h * landscape(i/10));
+                }
+                ctx.stroke();
+
+                let x=10, y = h * landscape(x/10);
+                const lr = parseFloat(slider.value);
+                ctx.fillStyle = 'var(--accent-pink)';
+                ctx.strokeStyle = 'var(--accent-pink)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x,y);
+                for(let i=0; i<5; i++) {
+                    ctx.beginPath();
+                    ctx.arc(x,y,3,0,2*Math.PI);
+                    ctx.fill();
+                    const grad = (landscape((x+1)/10) - landscape((x-1)/10)) / (2/10);
+                    x -= grad * lr * 10;
+                    y = h * landscape(x/10);
+                    ctx.lineTo(x,y);
+                    ctx.stroke();
+                }
+            }
+            slider.addEventListener('input', draw);
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+        function initBatchSize(container) {
+            container.innerHTML = `<div class="grid grid-cols-8 gap-1.5"></div>
+                <div class="text-center mt-3">
+                    <input type="range" class="bs-slider" min="1" max="32" value="8" class="w-full">
+                    <p class="text-xs text-gray-400 mt-2">Batch Size: <span class="bs-val">8</span></p>
+                </div>`;
+            const grid = container.querySelector('.grid');
+            const slider = container.querySelector('.bs-slider');
+            const val = container.querySelector('.bs-val');
+            for(let i=0; i<32; i++) {
+                const item = document.createElement('div');
+                item.className = 'h-3 rounded-sm bg-gray-600 transition-colors duration-200';
+                grid.appendChild(item);
+            }
+            const items = grid.children;
+            function update() {
+                const size = slider.value;
+                val.textContent = size;
+                for(let i=0; i<32; i++) {
+                    items[i].style.backgroundColor = i < size ? 'var(--accent-green)' : 'var(--text-muted-color)';
+                }
+            }
+            slider.addEventListener('input', update);
+            update();
+        }
+
+        function initGradientDescent(container) {
+             container.innerHTML = `<canvas class="w-full h-full rounded-lg cursor-pointer"></canvas>
+             <p class="text-xs text-center text-gray-400 mt-2">Click to drop the ball</p>`;
+            const canvas = container.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            let ball = {x: 30, y: 10, vx: 0, vy: 0};
+            let animationFrame;
+
+            function landscape(x) { return Math.sin(x * 0.05 + 2) * 0.3 + 0.6; }
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                if (w === 0) return;
+                ctx.clearRect(0,0,w,h);
+                ctx.strokeStyle = 'var(--accent-green)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for(let i=0; i<w; i++) ctx.lineTo(i, h * landscape(i));
+                ctx.stroke();
+
+                ctx.fillStyle = 'var(--accent-pink)';
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, 5, 0, 2*Math.PI);
+                ctx.fill();
+            }
+
+            function animate() {
+                ball.vy += 0.1;
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+                
+                const groundY = canvas.height * landscape(ball.x);
+                if (ball.y > groundY - 5) {
+                    ball.y = groundY - 5;
+                    ball.vy *= -0.3; ball.vx *= 0.95;
+                    const slope = (landscape(ball.x+1) - landscape(ball.x-1)) / 2;
+                    ball.vx += slope * 0.5;
+                }
+                if (ball.x < 0 || ball.x > canvas.width) ball.vx *= -1;
+
+                draw();
+                animationFrame = requestAnimationFrame(animate);
+            }
+            canvas.addEventListener('click', (e) => {
+                if (animationFrame) cancelAnimationFrame(animationFrame);
+                const rect = canvas.getBoundingClientRect();
+                ball = { x: e.clientX - rect.left, y: e.clientY - rect.top, vx: 0, vy: 0};
+                animate();
+            });
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+        function initLossFunction(container) {
+            container.innerHTML = `<canvas class="w-full h-24"></canvas>
+            <div class="text-center mt-2">
+                <p class="text-lg font-bold text-pink-400">Loss: <span class="loss-val">0.85</span></p>
+                <button class="secondary-btn mt-1">Train Step</button>
+            </div>`;
+            const canvas = container.querySelector('canvas');
+            const val = container.querySelector('.loss-val');
+            const btn = container.querySelector('button');
+            const ctx = canvas.getContext('2d');
+            let losses = [0.85, 0.72, 0.65, 0.51, 0.4, 0.33, 0.25];
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                if (w === 0) return;
+                ctx.clearRect(0,0,w,h);
+                ctx.strokeStyle = 'var(--accent-pink)'; ctx.lineWidth = 2;
+                ctx.beginPath();
+                losses.forEach((loss, i) => {
+                    const x = i / (losses.length - 1) * w;
+                    const y = (1 - loss) * h;
+                    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                });
+                ctx.stroke();
+            }
+            btn.addEventListener('click', () => {
+                const lastLoss = losses[losses.length-1];
+                if (lastLoss > 0.1) {
+                    losses.push(Math.max(0.05, lastLoss - (Math.random() * 0.1 + 0.05)));
+                    if(losses.length > 20) losses.shift();
+                    val.textContent = losses[losses.length-1].toFixed(2);
+                    draw();
+                }
+            });
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+        function initEpochs(container) {
+            container.innerHTML = `<p class="text-center text-3xl font-bold text-green-400">Epoch <span class="epoch-num">1</span></p>
+            <div class="w-full bg-gray-700 rounded-full h-2 my-3"><div class="epoch-progress bg-green-500 h-2 rounded-full"></div></div>
+            <button class="secondary-btn">Start Training</button>`;
+            const num = container.querySelector('.epoch-num');
+            const progress = container.querySelector('.epoch-progress');
+            const btn = container.querySelector('button');
+            let interval;
+            btn.addEventListener('click', () => {
+                if (btn.disabled) return;
+                clearInterval(interval);
+                let epoch = 1, p = 0;
+                btn.disabled = true;
+                interval = setInterval(() => {
+                    p += 2;
+                    progress.style.width = `${p}%`;
+                    num.textContent = epoch;
+                    if (p >= 100) {
+                        p=0; epoch++;
+                        if(epoch > 5) { clearInterval(interval); btn.disabled = false;}
+                    }
+                }, 20);
+            });
+        }
+        
+        function initOverfitting(container) {
+            container.innerHTML = `<canvas class="w-full h-24"></canvas>
+            <div class="grid grid-cols-3 gap-2 mt-2">
+                <button data-fit="under" class="secondary-btn">Underfit</button>
+                <button data-fit="good" class="secondary-btn active">Good</button>
+                <button data-fit="over" class="secondary-btn">Overfit</button>
+            </div>`;
+            const canvas = container.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            let mode = 'good';
+            const points = Array.from({length: 8}, (_,i) => [0.1 + i*0.1, 0.3 + Math.sin(i)*0.2 + (Math.random()-0.5)*0.2]);
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                if (w === 0) return;
+                ctx.clearRect(0,0,w,h);
+                // Points
+                ctx.fillStyle = 'var(--accent-blue)';
+                points.forEach(([px,py]) => { ctx.beginPath(); ctx.arc(px*w, py*h, 3, 0, 2*Math.PI); ctx.fill(); });
+                // Line
+                ctx.strokeStyle = 'var(--accent-pink)'; ctx.lineWidth=2;
+                ctx.beginPath();
+                if(mode === 'under') { ctx.moveTo(0, h*0.5); ctx.lineTo(w, h*0.4); }
+                else if (mode === 'good') {
+                    for(let i=0; i<w; i++) {
+                        const y = 0.35 + Math.sin((i/w)*10)*0.15;
+                        if(i===0) ctx.moveTo(i, y*h); else ctx.lineTo(i, y*h);
+                    }
+                } else { // over
+                    points.forEach(([px,py], i) => { if(i===0) ctx.moveTo(px*w,py*h); else ctx.lineTo(px*w,py*h); })
+                }
+                ctx.stroke();
+            }
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    container.querySelector('.active').classList.remove('active');
+                    btn.classList.add('active');
+                    mode = btn.dataset.fit;
+                    draw();
+                });
+            });
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+        function initBackpropagation(container) {
+            container.innerHTML = `<svg viewBox="0 0 100 40" class="w-full h-24"></svg>
+            <button class="secondary-btn mt-2">Animate</button>`;
+            const svg = container.querySelector('svg');
+            const btn = container.querySelector('button');
+            svg.innerHTML = `
+                <path class="forward" d="M 10 20 L 50 20" stroke="var(--accent-blue)" stroke-width="2" opacity="0.2"/>
+                <path class="forward" d="M 50 20 L 90 20" stroke="var(--accent-blue)" stroke-width="2" opacity="0.2" style="transition-delay: 0.5s"/>
+                <path class="backward" d="M 90 25 L 50 25" stroke="var(--accent-pink)" stroke-width="2" stroke-dasharray="2" opacity="0"/>
+                <path class="backward" d="M 50 25 L 10 25" stroke="var(--accent-pink)" stroke-width="2" stroke-dasharray="2" opacity="0" style="transition-delay: 0.5s"/>
+                <circle cx="10" cy="20" r="3" fill="var(--text-color)"/>
+                <circle cx="50" cy="20" r="4" fill="var(--text-color)"/>
+                <circle cx="90" cy="20" r="3" fill="var(--text-color)"/>
+            `;
+            btn.addEventListener('click', () => {
+                svg.classList.add('animate-backprop');
+                setTimeout(() => svg.classList.remove('animate-backprop'), 2000);
+            });
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .animate-backprop .forward { opacity: 1; transition: opacity 0.5s; }
+                .animate-backprop .backward { opacity: 1; transition: opacity 0.5s 1s; }
+            `;
+            container.appendChild(style);
+        }
+        
+        function initContextWindow(container) {
+            container.innerHTML = `<div class="relative h-24 bg-gray-900 rounded p-2 overflow-hidden">
+                <p class="text-xs text-gray-500">The quick brown fox jumps over the lazy dog. A large context window allows the model to remember earlier parts of the text, like the mention of the 'quick brown fox', when generating new content later on, improving coherence.</p>
+                <div class="context-window absolute top-0 left-0 h-full bg-pink-500/20 border-x-2 border-pink-400"></div>
+            </div>
+            <input type="range" class="cw-slider" min="20" max="100" value="40" class="w-full mt-3">`;
+            const win = container.querySelector('.context-window');
+            const slider = container.querySelector('.cw-slider');
+            slider.addEventListener('input', () => {
+                win.style.width = `${slider.value}%`;
+            });
+            win.style.width = '40%';
+        }
+        
+        function initHallucination(container) {
+            container.innerHTML = `<p class="text-center text-sm mb-3">"The capital of Australia is Sydney."</p>
+            <p class="feedback text-center h-5 mb-2 font-bold"></p>
+            <div class="flex gap-2">
+                <button data-correct="false" class="secondary-btn flex-1">👍 Plausible</button>
+                <button data-correct="true" class="secondary-btn flex-1">🤨 Unlikely</button>
+            </div>`;
+            const feedback = container.querySelector('.feedback');
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if(btn.dataset.correct === 'true') {
+                        feedback.textContent = 'Correct! It hallucinates.';
+                        feedback.style.color = 'var(--accent-green)';
+                    } else {
+                        feedback.textContent = 'Incorrect. It is a hallucination.';
+                        feedback.style.color = 'var(--accent-pink)';
+                    }
+                });
+            });
+        }
+        
+        function initRag(container) {
+            container.innerHTML = `<svg viewBox="0 0 100 60" class="w-full h-full">
+                <text x="5" y="10" font-size="6" fill="var(--text-color)">Query</text>
+                <rect x="5" y="15" width="20" height="10" rx="2" fill="var(--accent-blue)" opacity="0.5"/>
+                
+                <text x="70" y="10" font-size="6" fill="var(--text-color)">Knowledge Base</text>
+                <rect x="70" y="15" width="25" height="30" rx="2" fill="var(--accent-green)" opacity="0.5"/>
+                
+                <text x="5" y="40" font-size="6" fill="var(--text-color)">LLM</text>
+                <rect x="5" y="45" width="20" height="10" rx="2" fill="var(--accent-purple)" opacity="0.5"/>
+                
+                <path d="M 25 20 L 70 20" stroke="var(--border-color-bright)" fill="none" class="flow-line" stroke-dasharray="2"/>
+                <path d="M 70 30 L 25 50" stroke="var(--border-color-bright)" fill="none" class="flow-line" stroke-dasharray="2"/>
+            </svg>`;
+        }
+        
+        function initFineTuning(container) {
+            container.innerHTML = `<div class="flex justify-between text-xs text-gray-400 mb-1">
+                <span>Base Model</span><span>Specialized</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2"><div class="ft-progress bg-gradient-to-r from-blue-500 to-pink-500 h-2 rounded-full w-[10%] transition-all duration-500"></div></div>
+            <button class="secondary-btn mt-4">Start Fine-tuning</button>`;
+            const progress = container.querySelector('.ft-progress');
+            container.querySelector('button').addEventListener('click', () => {
+                progress.style.width = '10%';
+                setTimeout(() => progress.style.width = '100%', 100);
+            });
+        }
+        
+        function initPromptEngineering(container) {
+            container.innerHTML = `<div class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-400">Basic Prompt:</label>
+                    <p class="text-xs bg-gray-900 p-2 rounded">Tell me about dogs.</p>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">Engineered Prompt:</label>
+                    <p class="text-xs bg-gray-900 p-2 rounded">Act as a veterinarian. Write a summary of common health issues in golden retrievers for a new dog owner. Use simple language.</p>
+                </div>
+            </div>`;
+        }
+
+        function initInference(container) {
+             container.innerHTML = `<svg viewBox="0 0 100 40" class="w-full h-full">
+                <text x="10" y="10" font-size="6" fill="var(--text-color)">Input</text>
+                <rect x="5" y="15" width="20" height="10" rx="2" fill="var(--accent-blue)" opacity="0.5"/>
+                
+                <text x="44" y="10" font-size="6" fill="var(--text-color)">Model</text>
+                <circle cx="50" cy="20" r="8" fill="var(--accent-purple)" opacity="0.5" class="animate-pulse"/>
+                
+                <text x="78" y="10" font-size="6" fill="var(--text-color)">Output</text>
+                <rect x="75" y="15" width="20" height="10" rx="2" fill="var(--accent-green)" opacity="0.5"/>
+                
+                <path d="M 25 20 L 42 20" stroke="var(--border-color-bright)" fill="none" class="flow-line" stroke-dasharray="2"/>
+                <path d="M 58 20 L 75 20" stroke="var(--border-color-bright)" fill="none" class="flow-line" stroke-dasharray="2"/>
+            </svg>`;
+        }
+        
+        function initQuantization(container) {
+            container.innerHTML = `<div class="text-center">
+                <p class="text-2xl font-bold text-pink-400 model-size">12.4 GB</p>
+                <p class="text-xs text-gray-400 precision">FP32 (Full Precision)</p>
+            </div>
+            <button class="secondary-btn mt-3">Quantize to INT8</button>`;
+            const size = container.querySelector('.model-size');
+            const precision = container.querySelector('.precision');
+            container.querySelector('button').addEventListener('click', () => {
+                size.textContent = '3.1 GB';
+                precision.textContent = 'INT8 (Quantized)';
+            });
+        }
+
+        function initFewShot(container) {
+            container.innerHTML = `<div class="fs-examples space-y-1 text-xs text-left bg-gray-900 p-2 rounded">
+                <p>Tweet: "I love the new update!" -> Positive</p>
+                <p>Tweet: "My app keeps crashing." -> Negative</p>
+            </div>
+            <div class="mt-2 text-xs text-left bg-gray-800 p-2 rounded">
+                Tweet: "The design looks okay I guess" -> <span class="fs-output animate-pulse">...</span>
+            </div>`;
+            setTimeout(() => {
+                const output = container.querySelector('.fs-output');
+                if (output) {
+                    output.textContent = 'Neutral';
+                    output.classList.remove('animate-pulse');
+                }
+            }, 1500);
+        }
+        
+        function initBeamSearch(container) {
+            container.innerHTML = `<canvas class="w-full h-24"></canvas>
+            <div class="text-center mt-2">
+                <label class="text-xs text-gray-400">Beam Width: <span class="beam-val">2</span></label>
+                <input type="range" class="beam-slider" min="1" max="5" value="2" class="w-full mt-1">
+            </div>`;
+            const canvas = container.querySelector('canvas');
+            const slider = container.querySelector('.beam-slider');
+            const val = container.querySelector('.beam-val');
+            const ctx = canvas.getContext('2d');
+            
+            function draw() {
+                const beamWidth = parseInt(slider.value);
+                val.textContent = beamWidth;
+                const w = canvas.width, h = canvas.height;
+                if (w === 0) return;
+                ctx.clearRect(0,0,w,h);
+
+                const start = {x: 10, y: h/2};
+                ctx.fillStyle = 'var(--accent-purple)';
+                ctx.beginPath(); ctx.arc(start.x, start.y, 4, 0, 2*Math.PI); ctx.fill();
+
+                for(let i=0; i < 5; i++) {
+                    const end = {x: w-10, y: (h/(beamWidth*2)) * (i+1) };
+                    if (i < beamWidth) {
+                        ctx.strokeStyle = 'var(--accent-pink)';
+                        ctx.lineWidth = 1.5;
+                        ctx.fillStyle = 'var(--accent-pink)';
+                    } else {
+                        ctx.strokeStyle = 'var(--border-color-bright)';
+                        ctx.lineWidth = 0.5;
+                        ctx.fillStyle = 'var(--border-color-bright)';
+                    }
+                    ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(end.x, end.y, 2, 0, 2*Math.PI); ctx.fill();
+                }
+            }
+            slider.addEventListener('input', draw);
+            
+            canvasDrawFunctions.push(draw);
+            draw();
+        }
+
+
+        initAllInteractions();
+        
+        // --- EVENT LISTENERS (Category and Modal) ---
+
+        // Debounced resize handler
+        const debouncedResize = debounce(() => {
+            canvasDrawFunctions.forEach(func => func());
+        }, 100);
+
+        window.addEventListener('resize', debouncedResize);
+
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+                categoryButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.querySelectorAll('.concept-card').forEach(card => {
+                    card.style.display = (category === 'all' || card.dataset.category === category) ? 'flex' : 'none';
+                });
+            });
+        });
+
+        grid.addEventListener('click', (e) => {
+            if (e.target.classList.contains('learn-more')) {
+                const card = e.target.closest('.concept-card');
+                const conceptId = card.dataset.conceptId;
+                const details = conceptDetails[conceptId] || { title: "Coming Soon", content: "<p>Detailed explanation will be available soon.</p>"};
+                
+                modalTitle.textContent = details.title;
+                modalBody.innerHTML = details.content;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        });
+
+        const hideModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        closeModalBtn.addEventListener('click', hideModal);
+        modal.addEventListener('click', (e) => e.target === modal && hideModal());
+        document.addEventListener('keydown', (e) => e.key === "Escape" && hideModal());
+    });
+    </script>
+</body>
+</html>
