@@ -1141,6 +1141,11 @@
 
         window.addEventListener('resize', debouncedResize);
 
+        // Ensure canvases render correctly once all styles are loaded
+        window.addEventListener('load', () => {
+            canvasDrawFunctions.forEach(func => func());
+        });
+
         categoryButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const category = btn.dataset.category;
