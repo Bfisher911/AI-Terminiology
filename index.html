@@ -1131,6 +1131,11 @@
 
 
         initAllInteractions();
+
+        // Draw canvases once layout is ready
+        requestAnimationFrame(() => {
+            canvasDrawFunctions.forEach(func => func());
+        });
         
         // --- EVENT LISTENERS (Category and Modal) ---
 
@@ -1154,6 +1159,10 @@
                 
                 document.querySelectorAll('.concept-card').forEach(card => {
                     card.style.display = (category === 'all' || card.dataset.category === category) ? 'flex' : 'none';
+                });
+                // Redraw canvases when cards are toggled
+                requestAnimationFrame(() => {
+                    canvasDrawFunctions.forEach(func => func());
                 });
             });
         });
